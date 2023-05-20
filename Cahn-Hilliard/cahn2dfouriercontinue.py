@@ -3,12 +3,17 @@ from scipy.fft import rfft2, irfft2, rfftfreq, fftfreq
 import os
 import time
 #region função Fourier
-def cahnfourier2d(aa, kk2, kk4):#calculador da transformada
+def cfourierini(aa, kk2, kk4):#calculador da transformada inicial
     cct = rfft2(aa)
     cct3 = rfft2(aa**3)
     cct = cct + difd*dt*(-kk2*(cct3 - cct) - kk4*cct)
-    ccn = irfft2(cct)
-    return ccn
+    return cct
+
+def cfouriermid(aa, kk2, kk4):#calculador de cada passo
+    cct = aa
+    cct3 = rfft2(irfft2(aa)**3)
+    cct = cct + difd*dt*(-kk2*(cct3 - cct) - kk4*cct)
+    return cct
 #endregion
 
 #DIGITE O CÓDIGO AQUI
@@ -66,11 +71,12 @@ cc = np.zeros((u, l, l))
 
 cc[0] = ccoriginal[-1]
 
-temp = np.copy(cc[0])
+temp = cfourierini(cc[0], p, q)
 
 tempoini = time.time()
 for i in range(intervalo):
-    temp = cahnfourier2d(temp, p, q)
+    temp = cfouriermid(temp, p, q)
+temp = irfft2(temp)
 tempofinal = time.time()
 tempoestimado = tempofinal + (tempofinal - tempoini)*(u-1)
 
@@ -86,9 +92,9 @@ t = tini
 
 while t < tmax:
     for i in range(intervalo):
-        temp = cahnfourier2d(temp, p, q)
+        temp = cfouriermid(temp, p, q)
         t = round(t + dt, int(-np.log10(dt) + 2))
-    cc[v] = temp
+    cc[v] = irfft2(temp)
     print(f"Array numero {v} de {u-1} feito!")
     v+=1
 
